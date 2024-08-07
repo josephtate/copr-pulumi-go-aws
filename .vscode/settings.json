@@ -1,0 +1,9 @@
+{
+    "yaml.schemas": {
+        "https://raw.githubusercontent.com/dcermak/vscode-rke-cluster-config/main/schemas/cluster.yml.json": [
+            "cluster.yml",
+            "cluster.yaml"
+        ],
+        "https://json.schemastore.org/yamllint.json": "file:///home/jtate/remote/copr/copr-pulumi-go-aws/Pulumi.poc.yaml"
+    }
+}

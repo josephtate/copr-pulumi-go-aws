@@ -1,0 +1,18 @@
+config:
+  copr-pulumi-go-aws:awsRegion: us-east-2
+  copr-pulumi-go-aws:dbPassword:
+    secure: AAABACZhXAjIBssr/Gl8MxUdR31Dx12P/XM44TDqFi5Xhcq285MF80pGAU/gRWz5i3hGoLgDLwnQWBgHJeJRwE2j71f8/YMSI5i9Q0LMlNI=
+  copr-pulumi-go-aws:debug: "true"
+  copr-pulumi-go-aws:instanceTypeBackend: t2.micro
+  copr-pulumi-go-aws:instanceTypeDB: t2.micro
+  copr-pulumi-go-aws:instanceTypeDistGit: t2.micro
+  copr-pulumi-go-aws:instanceTypeFrontend: t2.micro
+  copr-pulumi-go-aws:instanceTypeKeyGen: t2.micro
+  copr-pulumi-go-aws:resourcePrefix: copr-poc-
+  copr-pulumi-go-aws:sshCIDRs:
+    - 69.218.222.87/32
+  copr-pulumi-go-aws:vpcNetworkARN: vpc-093bdd4994a234d9e
+  copr-pulumi-go-aws:vpcPublicSubnetARNs:
+    - subnet-05baf39e69e28142e
+    - subnet-0b565c3a89c9a8f78
+    - subnet-0c80fdf797c6f76b6
