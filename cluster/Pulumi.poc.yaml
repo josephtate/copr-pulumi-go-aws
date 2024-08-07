@@ -1,5 +1,5 @@
 config:
-  copr-pulumi-go-aws:awsRegion: us-east-2
+  aws:region: us-east-2
   copr-pulumi-go-aws:dbPassword:
     secure: AAABACZhXAjIBssr/Gl8MxUdR31Dx12P/XM44TDqFi5Xhcq285MF80pGAU/gRWz5i3hGoLgDLwnQWBgHJeJRwE2j71f8/YMSI5i9Q0LMlNI=
   copr-pulumi-go-aws:debug: "true"
@@ -16,3 +16,4 @@ config:
     - subnet-05baf39e69e28142e
     - subnet-0b565c3a89c9a8f78
     - subnet-0c80fdf797c6f76b6
+  copr-pulumi-go-aws:vpcPrivateSubnetARNs: []

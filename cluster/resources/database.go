@@ -11,7 +11,7 @@ import (
 func CreateDatabase(ctx *pulumi.Context, cfg *config.Config, dbsg *ec2.SecurityGroup) error {
 	resourcePrefix := cfg.Require("resourcePrefix")
 	instanceType := cfg.Require("instanceTypeDB")
-	subnetID := getFirstSubnetID(cfg, false)
+	subnetID := getFirstSubnetID(cfg, true)
 	debug := cfg.Require("debug") == "true"
 
 	ssmParameter, err := ssm.NewParameter(ctx, "dbPasswordParameter", &ssm.ParameterArgs{
@@ -25,12 +25,11 @@ func CreateDatabase(ctx *pulumi.Context, cfg *config.Config, dbsg *ec2.SecurityG
 	}
 
 	// Create the RDS PostgreSQL instance
-	db, err := rds.NewInstance(ctx, resourcePrefix+"-db", &rds.InstanceArgs{
+	db, err := rds.NewInstance(ctx, resourcePrefix+"db", &rds.InstanceArgs{
 		InstanceClass:       pulumi.String(instanceType),
 		AllocatedStorage:    pulumi.Int(20),
 		Engine:              pulumi.String("postgres"),
 		EngineVersion:       pulumi.String("15"),
-		Name:                pulumi.String(resourcePrefix + "db"),
 		Username:            pulumi.String("admin"),
 		Password:            ssmParameter.Value,
 		DbSubnetGroupName:   pulumi.String(subnetID),
