@@ -1,0 +1,7 @@
+name: copr-pulumi-go-aws-vpc
+runtime: go
+description: VPC setup for a COPR cluster
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: aws-yaml
