@@ -52,9 +52,9 @@ func main() {
 				return err
 			}
 		} else {
-			// Add the distgit SG to the backend
-			resources.AttachSecurityGroups(ctx, cfg, "backend", beinst, map[string]*ec2.SecurityGroup{
-				"distgit": sGroups.DistGit})
+			// // Add the distgit SG to the backend
+			// resources.AttachSecurityGroups(ctx, cfg, "backend", beinst, map[string]*ec2.SecurityGroup{
+			// 	"distgit": sGroups.DistGit})
 		}
 
 		if config.GetBool(ctx, "provisionStandaloneKeyGen") {
@@ -66,10 +66,9 @@ func main() {
 				return err
 			}
 		} else {
-			// Add the keygen SG to the backend
-			resources.AttachSecurityGroups(ctx, cfg, "backend", beinst, map[string]*ec2.SecurityGroup{
-				"keygen": sGroups.KeyGen})
-
+			// // Add the keygen SG to the backend
+			// resources.AttachSecurityGroups(ctx, cfg, "backend", beinst, map[string]*ec2.SecurityGroup{
+			// 	"keygen": sGroups.KeyGen})
 		}
 
 		if config.GetBool(ctx, "provisionStandaloneDB") {
@@ -78,8 +77,8 @@ func main() {
 				return err
 			}
 		} else {
-			resources.AttachSecurityGroups(ctx, cfg, "backend", beinst, map[string]*ec2.SecurityGroup{
-				"db": sGroups.DB})
+			// resources.AttachSecurityGroups(ctx, cfg, "backend", beinst, map[string]*ec2.SecurityGroup{
+			// 	"db": sGroups.DB})
 		}
 		return nil
 	})
