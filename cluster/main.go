@@ -18,15 +18,17 @@ func main() {
 			return err
 		}
 
+		// Please note that "backend" is named such because it is the executing engine of COPR, not the due to the
+		// typical frontend/backend development architecture. It is not the backend of the application.
 		beinst, err := resources.CreateInstance(ctx, cfg, "backend", map[string]*ec2.SecurityGroup{
 			"backend":  sGroups.Backend,
 			"internal": sGroups.Internal,
-		}, false)
+		}, true)
 		if err != nil {
 			return err
 		}
 
-		if config.GetBool(ctx, "provisionSeparateFrontend") {
+		if config.GetBool(ctx, "provisionStandaloneFrontend") {
 			_, err = resources.CreateInstance(ctx, cfg, "frontend", map[string]*ec2.SecurityGroup{
 				"frontend": sGroups.Frontend,
 				"internal": sGroups.Internal,
@@ -40,7 +42,7 @@ func main() {
 				"frontend": sGroups.Frontend})
 		}
 
-		if config.GetBool(ctx, "provisionSeparateDistGit") {
+		if config.GetBool(ctx, "provisionStandaloneDistGit") {
 
 			_, err = resources.CreateInstance(ctx, cfg, "distgit", map[string]*ec2.SecurityGroup{
 				"distgit":  sGroups.DistGit,
@@ -55,7 +57,7 @@ func main() {
 				"distgit": sGroups.DistGit})
 		}
 
-		if config.GetBool(ctx, "provisionSeparateKeyGen") {
+		if config.GetBool(ctx, "provisionStandaloneKeyGen") {
 			_, err = resources.CreateInstance(ctx, cfg, "keygen", map[string]*ec2.SecurityGroup{
 				"keygen":   sGroups.KeyGen,
 				"internal": sGroups.Internal,
@@ -70,7 +72,7 @@ func main() {
 
 		}
 
-		if config.GetBool(ctx, "provisionSeparateDB") {
+		if config.GetBool(ctx, "provisionStandaloneDB") {
 			err = resources.CreateDatabase(ctx, cfg, sGroups.DB)
 			if err != nil {
 				return err

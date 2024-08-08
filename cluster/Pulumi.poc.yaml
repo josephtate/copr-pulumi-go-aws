@@ -9,10 +9,10 @@ config:
   copr-pulumi-go-aws:instanceTypeDistGit: t2.micro
   copr-pulumi-go-aws:instanceTypeFrontend: t2.micro
   copr-pulumi-go-aws:instanceTypeKeyGen: t2.micro
-  copr-pulumi-go-aws:provisionSeparateDistDB: "false"
-  copr-pulumi-go-aws:provisionSeparateDistGit: "false"
-  copr-pulumi-go-aws:provisionSeparateDistKeyGen: "false"
-  copr-pulumi-go-aws:provisionSeparateFrontend: "false"
+  copr-pulumi-go-aws:provisionStandaloneDistDB: "false"
+  copr-pulumi-go-aws:provisionStandaloneDistGit: "false"
+  copr-pulumi-go-aws:provisionStandaloneDistKeyGen: "false"
+  copr-pulumi-go-aws:provisionStandaloneFrontend: "false"
   copr-pulumi-go-aws:resourcePrefix: copr-poc-
   copr-pulumi-go-aws:sshAdminKeys:
     - ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBCNxrufTGMbnk6TnaM8cLaRcsP0onrzpnHJlYs4WM0q/Kl5T0bbz7y6gxWcdd0CRaqRca5SQlBc7HQzDL0Ehles= jtate@alcatraz
