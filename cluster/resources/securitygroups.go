@@ -30,7 +30,7 @@ func CreateSecurityGroups(ctx *pulumi.Context, config *config.Config) (*Security
 	isg, err := ec2.NewSecurityGroup(ctx, resourcePrefix+"internal-sg", &ec2.SecurityGroupArgs{
 		VpcId:       vpcID,
 		Name:        pulumi.String(resourcePrefix + "internal-sg"),
-		Description: pulumi.String("Assigned to all instances: Allows all traffic between instances in the cluster. This is a 'get things done' SG. Please replace this with individual rules for each machine type."),
+		Description: pulumi.String("Assigned to all instances: Allows all traffic between instances in the cluster. This is a /get things done/ SG. Please replace this with individual rules for each machine type."),
 
 		Tags: pulumi.StringMap{
 			"Name": pulumi.String(resourcePrefix + "internal-sg"),
@@ -168,7 +168,7 @@ func CreateSecurityGroups(ctx *pulumi.Context, config *config.Config) (*Security
 
 	for _, cidr := range cidrs {
 		_, err := vpc.NewSecurityGroupIngressRule(
-			ctx, resourcePrefix+"internal-ingress-ssh-"+safeName(cidr), &vpc.SecurityGroupIngressRuleArgs{
+			ctx, resourcePrefix+"internal-ingress-ssh:"+cidr, &vpc.SecurityGroupIngressRuleArgs{
 				Description:     pulumi.String("Allow SSH traffic from " + cidr),
 				SecurityGroupId: isg.ID(),
 				FromPort:        pulumi.Int(22),
