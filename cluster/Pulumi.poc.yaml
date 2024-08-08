@@ -1,4 +1,8 @@
 config:
+  defaultTags:
+    Environment: poc
+    Project: copr-pulumi-go-aws
+    Owner: jtate
   aws:region: us-east-2
   copr-pulumi-go-aws:dbPassword:
     secure: AAABACZhXAjIBssr/Gl8MxUdR31Dx12P/XM44TDqFi5Xhcq285MF80pGAU/gRWz5i3hGoLgDLwnQWBgHJeJRwE2j71f8/YMSI5i9Q0LMlNI=

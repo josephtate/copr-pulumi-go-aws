@@ -1,13 +1,13 @@
 package resources
 
 import (
-	"encoding/base64"
-
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 )
 
-func safeName(name string) string {
-	return base64.URLEncoding.EncodeToString([]byte(name))
+func getDefaultTags(cfg *config.Config) map[string]string {
+	var ret map[string]string
+	cfg.RequireObject("defaultTags", &ret)
+	return ret
 }
 
 func getFirstSubnetID(cfg *config.Config, public bool) string {
