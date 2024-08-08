@@ -32,3 +32,9 @@ func getSSHCIDRs(cfg *config.Config) []string {
 	cfg.RequireObject("sshCIDRs", &cidrs)
 	return cidrs
 }
+
+func getAdminSSHKeys(cfg *config.Config) []string {
+	var keys []string
+	cfg.RequireObject("sshAdminKeys", &keys)
+	return keys
+}
