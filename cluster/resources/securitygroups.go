@@ -20,11 +20,15 @@ type SecurityGroups struct {
 
 func CreateSecurityGroups(ctx *pulumi.Context, config *config.Config) (*SecurityGroups, error) {
 	resourcePrefix := config.Require("resourcePrefix")
-	vpcID := config.Require("vpcNetworkARN")
-	// debug := config.Require("debug") == "true"
+	vpcID, err := GetVPCID(ctx, config.Require("vpcProjectName"))
+	if err != nil {
+		return nil, err
+	}
+
+	// debug := config.RequireBool("debug")
 
 	isg, err := ec2.NewSecurityGroup(ctx, resourcePrefix+"internal-sg", &ec2.SecurityGroupArgs{
-		VpcId:       pulumi.String(vpcID),
+		VpcId:       vpcID,
 		Name:        pulumi.String(resourcePrefix + "internal-sg"),
 		Description: pulumi.String("Assigned to all instances: Allows all traffic between instances in the cluster. This is a 'get things done' SG. Please replace this with individual rules for each machine type."),
 
@@ -75,7 +79,7 @@ func CreateSecurityGroups(ctx *pulumi.Context, config *config.Config) (*Security
 
 	// Create a security group with the resourcePrefix
 	besg, err := ec2.NewSecurityGroup(ctx, resourcePrefix+"backend-sg", &ec2.SecurityGroupArgs{
-		VpcId: pulumi.String(vpcID),
+		VpcId: vpcID,
 		Name:  pulumi.String(resourcePrefix + "backend-sg"),
 	})
 	if err != nil {
@@ -83,7 +87,7 @@ func CreateSecurityGroups(ctx *pulumi.Context, config *config.Config) (*Security
 	}
 
 	fesg, err := ec2.NewSecurityGroup(ctx, resourcePrefix+"frontend-sg", &ec2.SecurityGroupArgs{
-		VpcId: pulumi.String(vpcID),
+		VpcId: vpcID,
 		Name:  pulumi.String(resourcePrefix + "frontend-sg"),
 	})
 	if err != nil {
@@ -91,7 +95,7 @@ func CreateSecurityGroups(ctx *pulumi.Context, config *config.Config) (*Security
 	}
 
 	dgsg, err := ec2.NewSecurityGroup(ctx, resourcePrefix+"distgit-sg", &ec2.SecurityGroupArgs{
-		VpcId: pulumi.String(vpcID),
+		VpcId: vpcID,
 		Name:  pulumi.String(resourcePrefix + "distgit-sg"),
 	})
 	if err != nil {
@@ -99,7 +103,7 @@ func CreateSecurityGroups(ctx *pulumi.Context, config *config.Config) (*Security
 	}
 
 	kgsg, err := ec2.NewSecurityGroup(ctx, resourcePrefix+"keygen-sg", &ec2.SecurityGroupArgs{
-		VpcId:       pulumi.String(vpcID),
+		VpcId:       vpcID,
 		Name:        pulumi.String(resourcePrefix + "keygen-sg"),
 		Description: pulumi.String("Assigned to the keygen instances, only allows traffic from backend"),
 	})
@@ -108,7 +112,7 @@ func CreateSecurityGroups(ctx *pulumi.Context, config *config.Config) (*Security
 	}
 
 	lbsg, err := ec2.NewSecurityGroup(ctx, resourcePrefix+"lb-sg", &ec2.SecurityGroupArgs{
-		VpcId:       pulumi.String(vpcID),
+		VpcId:       vpcID,
 		Name:        pulumi.String(resourcePrefix + "lb-sg"),
 		Description: pulumi.String("Assigned to the load balancer to allow traffic"),
 	})
@@ -130,7 +134,7 @@ func CreateSecurityGroups(ctx *pulumi.Context, config *config.Config) (*Security
 	}
 
 	dbsg, err := ec2.NewSecurityGroup(ctx, resourcePrefix+"db-sg", &ec2.SecurityGroupArgs{
-		VpcId:       pulumi.String(vpcID),
+		VpcId:       vpcID,
 		Name:        pulumi.String(resourcePrefix + "db-sg"),
 		Description: pulumi.String("Assigned to all database instances, only allows traffic from authorized roles"),
 	})
@@ -151,7 +155,7 @@ func CreateSecurityGroups(ctx *pulumi.Context, config *config.Config) (*Security
 	}
 
 	buildersg, err := ec2.NewSecurityGroup(ctx, resourcePrefix+"builder-sg", &ec2.SecurityGroupArgs{
-		VpcId:       pulumi.String(vpcID),
+		VpcId:       vpcID,
 		Name:        pulumi.String(resourcePrefix + "builder-sg"),
 		Description: pulumi.String("Assigned to all builder instances"),
 	})
