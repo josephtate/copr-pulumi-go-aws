@@ -18,43 +18,67 @@ func main() {
 			return err
 		}
 
-		_, err = resources.CreateInstance(ctx, cfg, "backend", map[string]*ec2.SecurityGroup{
+		beinst, err := resources.CreateInstance(ctx, cfg, "backend", map[string]*ec2.SecurityGroup{
 			"backend":  sGroups.Backend,
 			"internal": sGroups.Internal,
-		})
+		}, false)
 		if err != nil {
 			return err
 		}
 
-		_, err = resources.CreateInstance(ctx, cfg, "frontend", map[string]*ec2.SecurityGroup{
-			"frontend": sGroups.Frontend,
-			"internal": sGroups.Internal,
-		})
-		if err != nil {
-			return err
+		if config.GetBool(ctx, "provisionSeparateFrontend") {
+			_, err = resources.CreateInstance(ctx, cfg, "frontend", map[string]*ec2.SecurityGroup{
+				"frontend": sGroups.Frontend,
+				"internal": sGroups.Internal,
+			}, true)
+			if err != nil {
+				return err
+			}
+		} else {
+			// Add the fe SG to the backend
+			resources.AttachSecurityGroups(ctx, cfg, "backend", beinst, map[string]*ec2.SecurityGroup{
+				"frontend": sGroups.Frontend})
 		}
 
-		_, err = resources.CreateInstance(ctx, cfg, "distgit", map[string]*ec2.SecurityGroup{
-			"distgit":  sGroups.DistGit,
-			"internal": sGroups.Internal,
-		})
-		if err != nil {
-			return err
+		if config.GetBool(ctx, "provisionSeparateDistGit") {
+
+			_, err = resources.CreateInstance(ctx, cfg, "distgit", map[string]*ec2.SecurityGroup{
+				"distgit":  sGroups.DistGit,
+				"internal": sGroups.Internal,
+			}, true)
+			if err != nil {
+				return err
+			}
+		} else {
+			// Add the distgit SG to the backend
+			resources.AttachSecurityGroups(ctx, cfg, "backend", beinst, map[string]*ec2.SecurityGroup{
+				"distgit": sGroups.DistGit})
 		}
 
-		_, err = resources.CreateInstance(ctx, cfg, "keygen", map[string]*ec2.SecurityGroup{
-			"keygen":   sGroups.KeyGen,
-			"internal": sGroups.Internal,
-		})
-		if err != nil {
-			return err
+		if config.GetBool(ctx, "provisionSeparateKeyGen") {
+			_, err = resources.CreateInstance(ctx, cfg, "keygen", map[string]*ec2.SecurityGroup{
+				"keygen":   sGroups.KeyGen,
+				"internal": sGroups.Internal,
+			}, true)
+			if err != nil {
+				return err
+			}
+		} else {
+			// Add the keygen SG to the backend
+			resources.AttachSecurityGroups(ctx, cfg, "backend", beinst, map[string]*ec2.SecurityGroup{
+				"keygen": sGroups.KeyGen})
+
 		}
 
-		err = resources.CreateDatabase(ctx, cfg, sGroups.DB)
-		if err != nil {
-			return err
+		if config.GetBool(ctx, "provisionSeparateDB") {
+			err = resources.CreateDatabase(ctx, cfg, sGroups.DB)
+			if err != nil {
+				return err
+			}
+		} else {
+			resources.AttachSecurityGroups(ctx, cfg, "backend", beinst, map[string]*ec2.SecurityGroup{
+				"db": sGroups.DB})
 		}
-
 		return nil
 	})
 }
