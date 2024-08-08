@@ -62,6 +62,9 @@ func main() {
 		privateSubnets := make([]*ec2.Subnet, len(privateSubnetCidrBlocks))
 		natGateways := make(map[string]*ec2.NatGateway, len(publicSubnetCidrBlocks))
 
+		publicSubnetsByAz := make(map[string]*ec2.Subnet, len(publicSubnetCidrBlocks))
+		privateSubnetsByAz := make(map[string]*ec2.Subnet, len(privateSubnetCidrBlocks))
+
 		for i, publicSubnetCidrBlock := range publicSubnetCidrBlocks {
 			// create subnets in azs back to front
 			az := azs.Names[numAZs-(1+i%numAZs)]
@@ -76,6 +79,7 @@ func main() {
 			if err != nil {
 				return err
 			}
+			publicSubnetsByAz[az] = publicSubnet
 
 			pRTAN := fmt.Sprintf("%spublic-rta-%s", resPrefix, az)
 			_, err = ec2.NewRouteTableAssociation(ctx, pRTAN, &ec2.RouteTableAssociationArgs{
@@ -118,6 +122,8 @@ func main() {
 			if err != nil {
 				return err
 			}
+
+			privateSubnetsByAz[az] = privateSubnet
 
 			prRTAN := fmt.Sprintf("%sprivate-rta-%s", resPrefix, az)
 			if natGateways[az] != nil {
@@ -178,12 +184,31 @@ func main() {
 		ctx.Export("privateDomainName", pulumi.String(privateDomain))
 
 		ctx.Export("vpcId", vpc.ID())
+
+		nets := make(pulumi.StringArray, len(publicSubnets))
 		for i, subnet := range publicSubnets {
-			ctx.Export(fmt.Sprintf("publicSubnet%d", i), subnet.ID())
+			nets[i] = subnet.ID().ToStringOutput()
 		}
+
+		mnets := make(pulumi.StringMap, len(publicSubnets))
+		for az, subnet := range publicSubnetsByAz {
+			mnets[az] = subnet.ID().ToStringOutput()
+		}
+		ctx.Export("publicSubnets", nets.ToStringArrayOutput())
+		ctx.Export("publicSubnetsAZs", mnets.ToStringMapOutput())
+
+		nets2 := make(pulumi.StringArray, len(privateSubnets))
 		for i, subnet := range privateSubnets {
-			ctx.Export(fmt.Sprintf("privateSubnet%d", i), subnet.ID())
+			nets2[i] = subnet.ID().ToStringOutput()
 		}
+
+		mnets2 := make(pulumi.StringMap, len(privateSubnets))
+		for az, subnet := range privateSubnetsByAz {
+			mnets2[az] = subnet.ID().ToStringOutput()
+		}
+
+		ctx.Export("privateSubnets", nets2.ToStringArrayOutput())
+		ctx.Export("privateSubnetsAZs", mnets2.ToStringMapOutput())
 
 		return nil
 	})
