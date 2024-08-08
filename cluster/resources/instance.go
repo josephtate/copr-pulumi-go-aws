@@ -3,9 +3,11 @@ package resources
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2"
+	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/route53"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ssm"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
@@ -67,19 +69,28 @@ func AttachSecurityGroups(
 	return nil
 }
 
-// Please note that "backend" is named such because it is the executing engine of COPR, not the due to the typical
-// frontend/backend development architecture. It is not the backend of the application.
+func Route53Record(ctx *pulumi.Context, name string, zoneID, hostname, ip *pulumi.StringOutput, ttl int) (*route53.Record, error) {
+	return route53.NewRecord(ctx, name, &route53.RecordArgs{
+		Name:    hostname,
+		ZoneId:  zoneID,
+		Type:    pulumi.String("A"),
+		Ttl:     pulumi.Int(ttl),
+		Records: pulumi.StringArray{ip},
+	})
+}
+
 func CreateInstance(
 	ctx *pulumi.Context,
-	config *config.Config,
+	cfg *config.Config,
 	name string,
 	securityGroups map[string]*ec2.SecurityGroup,
 	public bool,
 ) (*ec2.Instance, error) {
-	resourcePrefix := config.Require("resourcePrefix")
-	sshKeyPath := config.Require("sshKeySSMPathBase")
-	instanceType := config.Require("instanceTypeBackend")
-	vpcProject := config.Require("vpcProjectName")
+	resourcePrefix := cfg.Require("resourcePrefix")
+	sshKeyPath := cfg.Require("sshKeySSMPathBase")
+	instanceType := cfg.Require("instanceTypeBackend")
+	vpcProject := cfg.Require("vpcProjectName")
+	userSSHKeys := getAdminSSHKeys(cfg)
 
 	subnetID, err := GetFirstSubnet(ctx, vpcProject, public)
 	if err != nil {
@@ -90,25 +101,98 @@ func CreateInstance(
 	if err != nil {
 		return nil, err
 	}
-	// Launch an EC2 instance with the resourcePrefix
+
 	sshKey, err := SetupSSHKey(ctx, resourcePrefix+"keypair", sshKeyPath)
 	if err != nil {
 		return nil, err
 	}
 
+	extDomain, err := GetPublicDomainName(ctx, vpcProject)
+	if err != nil {
+		return nil, err
+	}
+
+	intDomain, err := GetPrivateDomainName(ctx, vpcProject)
+	if err != nil {
+		return nil, err
+	}
+
+	intZoneID, err := GetPrivateHostedZoneID(ctx, vpcProject)
+	extZoneID, err := GetPublicHostedZoneID(ctx, vpcProject)
+
+	subDomain := strings.TrimSuffix(resourcePrefix, "-")
+	subDomain = strings.ReplaceAll(subDomain, "-", ".")
+	intHostname := pulumi.Sprintf("%s.%s.%s", name, subDomain, intDomain)
+	extHostname := pulumi.Sprintf("%s.%s.%s", name, subDomain, extDomain)
+	var userData pulumi.StringOutput
+	if len(userSSHKeys) > 0 {
+		userData = pulumi.Sprintf(`#cloud-config
+hostname: %s
+users:
+  - name: rocky
+    ssh-authorized-keys:
+    - %s
+`,
+			intHostname,
+			strings.Join(userSSHKeys, "\n    - "))
+	} else {
+		userData = pulumi.String("").ToStringOutput()
+	}
+	debug := cfg.RequireBool("debug")
+
+	defaultTags := getDefaultTags(cfg)
+
+	// Convert default tags to pulumi.StringMap
+	tags := pulumi.StringMap{}
+	for k, v := range defaultTags {
+		tags[k] = pulumi.String(v)
+	}
+
+	tags["Name"] = pulumi.String(resourcePrefix + name)
+	tags["ansible-ssh-user"] = pulumi.String("rocky")
+	tags["ansible-python-interpreter"] = pulumi.String("/usr/bin/python3")
+
+	// Launch an EC2 instance with the resourcePrefix
 	inst, err := ec2.NewInstance(ctx, resourcePrefix+name, &ec2.InstanceArgs{
 		InstanceType:             pulumi.String(instanceType),
 		Ami:                      pulumi.String(amiID),
 		SubnetId:                 subnetID,
 		AssociatePublicIpAddress: pulumi.Bool(public),
-		DisableApiTermination:    pulumi.Bool(config.RequireBool("debug")),
+		DisableApiTermination:    pulumi.Bool(debug),
 		KeyName:                  sshKey.KeyName,
+		UserData:                 userData,
+		Tags:                     tags,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	err = AttachSecurityGroups(ctx, config, name, inst, securityGroups)
+	ttl := 300
+	if debug {
+		ttl = 60
+	}
 
+	_, err = Route53Record(ctx, resourcePrefix+name+"-int-route53-record", &intZoneID, &intHostname, &inst.PrivateIp, ttl)
+	if err != nil {
+		return nil, err
+	}
+
+	if public {
+		_, err = Route53Record(ctx, resourcePrefix+name+"-ext-route53-record", &extZoneID, &extHostname, &inst.PublicIp, ttl)
+		if err != nil {
+			return nil, err
+		}
+		ctx.Export(name+"InstancePublicIP", inst.PublicIp)
+		ctx.Export(name+"InstancePublicDNS", inst.PublicDns)
+		ctx.Export(name+"InstancePublicHostname", extHostname)
+	}
+
+	err = AttachSecurityGroups(ctx, cfg, name, inst, securityGroups)
+
+	ctx.Export(name+"InstancePrivateIP", inst.PrivateIp)
+	ctx.Export(name+"InstancePrivateDNS", inst.PrivateDns)
+	ctx.Export(name+"InstancePrivateHostname", intHostname)
+
+	ctx.Export(name+"InstanceSSHKeyPair", sshKey.KeyName)
 	return inst, nil
 }
