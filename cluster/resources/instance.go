@@ -83,7 +83,7 @@ func CreateInstance(
 	ctx *pulumi.Context,
 	cfg *config.Config,
 	name string,
-	securityGroups map[string]*ec2.SecurityGroup,
+	securityGroups []*ec2.SecurityGroup,
 	public bool,
 ) (*ec2.Instance, error) {
 	resourcePrefix := cfg.Require("resourcePrefix")
@@ -152,6 +152,11 @@ users:
 	tags["ansible-ssh-user"] = pulumi.String("rocky")
 	tags["ansible-python-interpreter"] = pulumi.String("/usr/bin/python3")
 
+	ids := make(pulumi.StringArray, len(securityGroups))
+	for i, sgid := range securityGroups {
+		ids[i] = sgid.ID()
+	}
+
 	// Launch an EC2 instance with the resourcePrefix
 	inst, err := ec2.NewInstance(ctx, resourcePrefix+name, &ec2.InstanceArgs{
 		InstanceType:             pulumi.String(instanceType),
@@ -160,6 +165,7 @@ users:
 		AssociatePublicIpAddress: pulumi.Bool(public),
 		DisableApiTermination:    pulumi.Bool(debug),
 		KeyName:                  sshKey.KeyName,
+		VpcSecurityGroupIds:      ids,
 		UserData:                 userData,
 		Tags:                     tags,
 	})
@@ -187,7 +193,7 @@ users:
 		ctx.Export(name+"InstancePublicHostname", extHostname)
 	}
 
-	err = AttachSecurityGroups(ctx, cfg, name, inst, securityGroups)
+	// err = AttachSecurityGroups(ctx, cfg, name, inst, securityGroups)
 
 	ctx.Export(name+"InstancePrivateIP", inst.PrivateIp)
 	ctx.Export(name+"InstancePrivateDNS", inst.PrivateDns)

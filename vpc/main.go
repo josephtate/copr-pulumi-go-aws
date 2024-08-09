@@ -33,6 +33,9 @@ func main() {
 			CidrBlock:          pulumi.String(VPCCIDR),
 			EnableDnsSupport:   pulumi.Bool(true),
 			EnableDnsHostnames: pulumi.Bool(true),
+			Tags: pulumi.StringMap{
+				"Name": pulumi.String(resPrefix + "vpc"),
+			},
 		})
 		if err != nil {
 			return err

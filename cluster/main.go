@@ -8,6 +8,14 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 )
 
+func backendSGs(cfg *config.Config, sGroups *resources.SecurityGroups) []*ec2.SecurityGroup {
+	sgs := []*ec2.SecurityGroup{sGroups.Backend, sGroups.Internal}
+	if !cfg.GetBool("provisionStandaloneFrontend") {
+		sgs = append(sgs, sGroups.Frontend)
+	}
+	return sgs
+}
+
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
 		// Fetch configuration values
@@ -20,55 +28,39 @@ func main() {
 
 		// Please note that "backend" is named such because it is the executing engine of COPR, not the due to the
 		// typical frontend/backend development architecture. It is not the backend of the application.
-		beinst, err := resources.CreateInstance(ctx, cfg, "backend", map[string]*ec2.SecurityGroup{
-			"backend":  sGroups.Backend,
-			"internal": sGroups.Internal,
-		}, true)
+		_, err = resources.CreateInstance(ctx, cfg, "backend", backendSGs(cfg, sGroups), true)
 		if err != nil {
 			return err
 		}
 
 		if config.GetBool(ctx, "provisionStandaloneFrontend") {
-			_, err = resources.CreateInstance(ctx, cfg, "frontend", map[string]*ec2.SecurityGroup{
-				"frontend": sGroups.Frontend,
-				"internal": sGroups.Internal,
+			_, err = resources.CreateInstance(ctx, cfg, "frontend", []*ec2.SecurityGroup{
+				sGroups.Frontend,
+				sGroups.Internal,
 			}, true)
 			if err != nil {
 				return err
 			}
-		} else {
-			// Add the fe SG to the backend
-			resources.AttachSecurityGroups(ctx, cfg, "backend", beinst, map[string]*ec2.SecurityGroup{
-				"frontend": sGroups.Frontend})
 		}
 
 		if config.GetBool(ctx, "provisionStandaloneDistGit") {
-
-			_, err = resources.CreateInstance(ctx, cfg, "distgit", map[string]*ec2.SecurityGroup{
-				"distgit":  sGroups.DistGit,
-				"internal": sGroups.Internal,
+			_, err = resources.CreateInstance(ctx, cfg, "distgit", []*ec2.SecurityGroup{
+				sGroups.DistGit,
+				sGroups.Internal,
 			}, true)
 			if err != nil {
 				return err
 			}
-		} else {
-			// // Add the distgit SG to the backend
-			// resources.AttachSecurityGroups(ctx, cfg, "backend", beinst, map[string]*ec2.SecurityGroup{
-			// 	"distgit": sGroups.DistGit})
 		}
 
 		if config.GetBool(ctx, "provisionStandaloneKeyGen") {
-			_, err = resources.CreateInstance(ctx, cfg, "keygen", map[string]*ec2.SecurityGroup{
-				"keygen":   sGroups.KeyGen,
-				"internal": sGroups.Internal,
+			_, err = resources.CreateInstance(ctx, cfg, "keygen", []*ec2.SecurityGroup{
+				sGroups.KeyGen,
+				sGroups.Internal,
 			}, true)
 			if err != nil {
 				return err
 			}
-		} else {
-			// // Add the keygen SG to the backend
-			// resources.AttachSecurityGroups(ctx, cfg, "backend", beinst, map[string]*ec2.SecurityGroup{
-			// 	"keygen": sGroups.KeyGen})
 		}
 
 		if config.GetBool(ctx, "provisionStandaloneDB") {
@@ -76,9 +68,6 @@ func main() {
 			if err != nil {
 				return err
 			}
-		} else {
-			// resources.AttachSecurityGroups(ctx, cfg, "backend", beinst, map[string]*ec2.SecurityGroup{
-			// 	"db": sGroups.DB})
 		}
 		return nil
 	})
