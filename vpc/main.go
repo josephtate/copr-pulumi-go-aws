@@ -43,6 +43,9 @@ func main() {
 
 		internetGateway, err := ec2.NewInternetGateway(ctx, resPrefix+"igw", &ec2.InternetGatewayArgs{
 			VpcId: vpc.ID(),
+			Tags: pulumi.StringMap{
+				"Name": pulumi.String(resPrefix + "igw"),
+			},
 		})
 		if err != nil {
 			return err
@@ -78,6 +81,9 @@ func main() {
 				CidrBlock:           pulumi.String(publicSubnetCidrBlock),
 				AvailabilityZone:    pulumi.String(az),
 				MapPublicIpOnLaunch: pulumi.Bool(true),
+				Tags: pulumi.StringMap{
+					"Name": pulumi.String(pSN),
+				},
 			})
 			if err != nil {
 				return err
@@ -103,6 +109,9 @@ func main() {
 				natGateway, err := ec2.NewNatGateway(ctx, pNGN, &ec2.NatGatewayArgs{
 					SubnetId:     publicSubnet.ID(),
 					AllocationId: eip.ID(),
+					Tags: pulumi.StringMap{
+						"Name": pulumi.String(pNGN),
+					},
 				})
 				if err != nil {
 					return err
@@ -121,6 +130,9 @@ func main() {
 				VpcId:            vpc.ID(),
 				CidrBlock:        pulumi.String(privateSubnetCidrBlock),
 				AvailabilityZone: pulumi.String(az),
+				Tags: pulumi.StringMap{
+					"Name": pulumi.String(prSN),
+				},
 			})
 			if err != nil {
 				return err
