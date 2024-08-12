@@ -28,23 +28,33 @@ func main() {
 
 		// Please note that "backend" is named such because it is the executing engine of COPR, not the due to the
 		// typical frontend/backend development architecture. It is not the backend of the application.
-		_, err = resources.CreateInstance(ctx, cfg, "backend", backendSGs(cfg, sGroups), true)
+		_, err = resources.CreateInstance(ctx, cfg, "backend", cfg.GetInt("instanceRootVolSizeBackend"), backendSGs(cfg, sGroups), true)
 		if err != nil {
 			return err
 		}
 
 		if config.GetBool(ctx, "provisionStandaloneFrontend") {
-			_, err = resources.CreateInstance(ctx, cfg, "frontend", []*ec2.SecurityGroup{
-				sGroups.Frontend,
-				sGroups.Internal,
-			}, true)
+			rootSize := cfg.GetInt("instanceRootVolSizeBackend")
+			if rootSize == 0 {
+				rootSize = 30
+			}
+			_, err = resources.CreateInstance(ctx, cfg, "frontend",
+				rootSize,
+				[]*ec2.SecurityGroup{
+					sGroups.Frontend,
+					sGroups.Internal,
+				}, true)
 			if err != nil {
 				return err
 			}
 		}
 
 		if config.GetBool(ctx, "provisionStandaloneDistGit") {
-			_, err = resources.CreateInstance(ctx, cfg, "distgit", []*ec2.SecurityGroup{
+			rootSize := cfg.GetInt("instanceRootVolSizeBackend")
+			if rootSize == 0 {
+				rootSize = 30
+			}
+			_, err = resources.CreateInstance(ctx, cfg, "distgit", rootSize, []*ec2.SecurityGroup{
 				sGroups.DistGit,
 				sGroups.Internal,
 			}, true)
@@ -54,7 +64,11 @@ func main() {
 		}
 
 		if config.GetBool(ctx, "provisionStandaloneKeyGen") {
-			_, err = resources.CreateInstance(ctx, cfg, "keygen", []*ec2.SecurityGroup{
+			rootSize := cfg.GetInt("instanceRootVolSizeBackend")
+			if rootSize == 0 {
+				rootSize = 30
+			}
+			_, err = resources.CreateInstance(ctx, cfg, "keygen", rootSize, []*ec2.SecurityGroup{
 				sGroups.KeyGen,
 				sGroups.Internal,
 			}, true)

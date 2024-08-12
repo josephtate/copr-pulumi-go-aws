@@ -8,11 +8,12 @@ config:
     secure: AAABACZhXAjIBssr/Gl8MxUdR31Dx12P/XM44TDqFi5Xhcq285MF80pGAU/gRWz5i3hGoLgDLwnQWBgHJeJRwE2j71f8/YMSI5i9Q0LMlNI=
   copr-pulumi-go-aws:debug: "true"
   copr-pulumi-go-aws:instanceSSHKeyName: poc-ssh-key
-  copr-pulumi-go-aws:instanceTypeBackend: t2.micro
-  copr-pulumi-go-aws:instanceTypeDB: t2.micro
-  copr-pulumi-go-aws:instanceTypeDistGit: t2.micro
-  copr-pulumi-go-aws:instanceTypeFrontend: t2.micro
-  copr-pulumi-go-aws:instanceTypeKeyGen: t2.micro
+  copr-pulumi-go-aws:instanceTypeBackend: t3a.small
+  copr-pulumi-go-aws:instanceRootVolSizeBackend: 200
+  copr-pulumi-go-aws:instanceTypeDB: t3a.small
+  copr-pulumi-go-aws:instanceTypeDistGit: t3a.small
+  copr-pulumi-go-aws:instanceTypeFrontend: t3a.small
+  copr-pulumi-go-aws:instanceTypeKeyGen: t3a.small
   copr-pulumi-go-aws:provisionStandaloneDistDB: "false"
   copr-pulumi-go-aws:provisionStandaloneDistGit: "false"
   copr-pulumi-go-aws:provisionStandaloneDistKeyGen: "false"

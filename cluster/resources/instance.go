@@ -83,6 +83,7 @@ func CreateInstance(
 	ctx *pulumi.Context,
 	cfg *config.Config,
 	name string,
+	rootVolSize int,
 	securityGroups []*ec2.SecurityGroup,
 	public bool,
 ) (*ec2.Instance, error) {
@@ -92,12 +93,14 @@ func CreateInstance(
 	vpcProject := cfg.Require("vpcProjectName")
 	userSSHKeys := getAdminSSHKeys(cfg)
 
+	loginUser := "fedora"
+
 	subnetID, err := GetFirstSubnet(ctx, vpcProject, public)
 	if err != nil {
 		return nil, err
 	}
 
-	amiID, err := GetLatestRocky9Ami(ctx)
+	amiID, err := GetLatestFedoraAmi(ctx, 40)
 	if err != nil {
 		return nil, err
 	}
@@ -126,14 +129,35 @@ func CreateInstance(
 	extHostname := pulumi.Sprintf("%s.%s.%s", name, subDomain, extDomain)
 	var userData pulumi.StringOutput
 	if len(userSSHKeys) > 0 {
-		userData = pulumi.Sprintf(`#cloud-config
+		udTemplate := `#cloud-config
 hostname: %s
+package_update: true
+package_upgrade: true
+packages:
+  - bash-completion
+  - vim
+  - git
+groups:
+  - docker
 users:
-  - name: rocky
+  - name: ciq
+    groups:
+    - wheel
+    - docker
+    chpasswd:
+      expire: False
+    sudo: ALL=(ALL) NOPASSWD:ALL
     ssh-authorized-keys:
     - %s
-`,
+    - %s
+`
+		if strings.Contains(udTemplate, "\t") {
+			return nil, fmt.Errorf("user data contains tabs")
+		}
+
+		userData = pulumi.Sprintf(udTemplate,
 			intHostname,
+			sshKey.PublicKey,
 			strings.Join(userSSHKeys, "\n    - "))
 	} else {
 		userData = pulumi.String("").ToStringOutput()
@@ -149,7 +173,7 @@ users:
 	}
 
 	tags["Name"] = pulumi.String(resourcePrefix + name)
-	tags["ansible-ssh-user"] = pulumi.String("rocky")
+	tags["ansible-ssh-user"] = pulumi.String(loginUser)
 	tags["ansible-python-interpreter"] = pulumi.String("/usr/bin/python3")
 
 	ids := make(pulumi.StringArray, len(securityGroups))
@@ -163,11 +187,17 @@ users:
 		Ami:                      pulumi.String(amiID),
 		SubnetId:                 subnetID,
 		AssociatePublicIpAddress: pulumi.Bool(public),
-		DisableApiTermination:    pulumi.Bool(debug),
+		DisableApiTermination:    pulumi.Bool(!debug),
 		KeyName:                  sshKey.KeyName,
 		VpcSecurityGroupIds:      ids,
 		UserData:                 userData,
 		Tags:                     tags,
+		EbsBlockDevices: ec2.InstanceEbsBlockDeviceArray{
+			&ec2.InstanceEbsBlockDeviceArgs{
+				DeviceName: pulumi.String("/dev/sda1"),
+				VolumeSize: pulumi.Int(rootVolSize), // Set the desired size in GiB
+			},
+		},
 	})
 	if err != nil {
 		return nil, err
