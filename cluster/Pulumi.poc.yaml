@@ -21,7 +21,11 @@ config:
   copr-pulumi-go-aws:resourcePrefix: copr-poc-
   copr-pulumi-go-aws:sshAdminKeys:
     - ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBCNxrufTGMbnk6TnaM8cLaRcsP0onrzpnHJlYs4WM0q/Kl5T0bbz7y6gxWcdd0CRaqRca5SQlBc7HQzDL0Ehles= jtate@alcatraz
+    - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOPXb3njYjhjwYFXFY8kTHXsFXpidzNc/Y4dympFdwFv juphoff@CIQ
   copr-pulumi-go-aws:sshCIDRs:
+    # Joseph @home
     - 69.218.222.87/32
+    # Jeff @home
+    - 204.111.114.196/32
   copr-pulumi-go-aws:sshKeySSMPathBase: /ec2/keypair/poc
   copr-pulumi-go-aws:vpcProjectName: josephtate/copr-pulumi-go-aws-vpc
