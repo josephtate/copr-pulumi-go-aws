@@ -126,8 +126,8 @@ func CreateSecurityGroups(ctx *pulumi.Context, config *config.Config) (*Security
 		SecurityGroupId:           fesg.ID(),
 		ReferencedSecurityGroupId: lbsg.ID(),
 		IpProtocol:                pulumi.String("tcp"),
-		FromPort:                  pulumi.Int(80),
-		ToPort:                    pulumi.Int(80),
+		FromPort:                  pulumi.Int(5000),
+		ToPort:                    pulumi.Int(5000),
 	})
 	if err != nil {
 		return nil, err
@@ -171,9 +171,7 @@ func CreateSecurityGroups(ctx *pulumi.Context, config *config.Config) (*Security
 			ctx, resourcePrefix+"internal-ingress-ssh:"+cidr, &vpc.SecurityGroupIngressRuleArgs{
 				Description:     pulumi.String("Allow SSH traffic from " + cidr),
 				SecurityGroupId: isg.ID(),
-				FromPort:        pulumi.Int(22),
-				ToPort:          pulumi.Int(22),
-				IpProtocol:      pulumi.String("tcp"),
+				IpProtocol:      pulumi.String("-1"),
 				CidrIpv4:        pulumi.String(cidr),
 			})
 		if err != nil {
