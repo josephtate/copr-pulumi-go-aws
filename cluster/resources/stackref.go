@@ -95,3 +95,21 @@ func GetFirstSubnet(ctx *pulumi.Context, project string, public bool) (pulumi.St
 
 	return subnets.Index(pulumi.Int(0)), nil
 }
+
+func GetALBCertARN(ctx *pulumi.Context, project string) (pulumi.StringOutput, error) {
+	return getReferenceValue(ctx, project, "ALBCertARN")
+}
+
+func GetALBCertDomainName(ctx *pulumi.Context, project string) (pulumi.StringOutput, error) {
+	return getReferenceValue(ctx, project, "ALBCertDomainName")
+}
+
+func GetALBCertSubjectAlternativeNames(ctx *pulumi.Context, project string) (pulumi.StringArrayOutput, error) {
+	stackRef, err := GetStackRef(ctx, project)
+	if err != nil {
+		return pulumi.StringArrayOutput{}, err
+	}
+
+	value := stackRef.GetOutput(pulumi.String("ALBCertSubjectAlternativeNames")).AsStringArrayOutput()
+	return value, nil
+}

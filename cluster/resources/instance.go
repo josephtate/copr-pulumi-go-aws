@@ -191,6 +191,7 @@ users:
 		KeyName:                  sshKey.KeyName,
 		VpcSecurityGroupIds:      ids,
 		UserData:                 userData,
+		UserDataReplaceOnChange:  pulumi.Bool(false),
 		Tags:                     tags,
 		EbsBlockDevices: ec2.InstanceEbsBlockDeviceArray{
 			&ec2.InstanceEbsBlockDeviceArgs{

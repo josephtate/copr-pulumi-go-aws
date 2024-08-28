@@ -1,15 +1,15 @@
 config:
-  defaultTags:
-    Environment: poc
-    Project: copr-pulumi-go-aws
-    Owner: jtate
   aws:region: us-east-2
   copr-pulumi-go-aws:dbPassword:
     secure: AAABACZhXAjIBssr/Gl8MxUdR31Dx12P/XM44TDqFi5Xhcq285MF80pGAU/gRWz5i3hGoLgDLwnQWBgHJeJRwE2j71f8/YMSI5i9Q0LMlNI=
   copr-pulumi-go-aws:debug: "true"
+  copr-pulumi-go-aws:defaultTags:
+    Environment: poc
+    Owner: jtate
+    Project: copr-pulumi-go-aws
+  copr-pulumi-go-aws:instanceRootVolSizeBackend: "200"
   copr-pulumi-go-aws:instanceSSHKeyName: poc-ssh-key
-  copr-pulumi-go-aws:instanceTypeBackend: t3a.small
-  copr-pulumi-go-aws:instanceRootVolSizeBackend: 200
+  copr-pulumi-go-aws:instanceTypeBackend: r6a.4xlarge
   copr-pulumi-go-aws:instanceTypeDB: t3a.small
   copr-pulumi-go-aws:instanceTypeDistGit: t3a.small
   copr-pulumi-go-aws:instanceTypeFrontend: t3a.small
@@ -22,10 +22,19 @@ config:
   copr-pulumi-go-aws:sshAdminKeys:
     - ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBCNxrufTGMbnk6TnaM8cLaRcsP0onrzpnHJlYs4WM0q/Kl5T0bbz7y6gxWcdd0CRaqRca5SQlBc7HQzDL0Ehles= jtate@alcatraz
     - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOPXb3njYjhjwYFXFY8kTHXsFXpidzNc/Y4dympFdwFv juphoff@CIQ
+    - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIALe9yqMoFzyZWr5PLULbQsH94e+D29a0QhM7mXDfXwn blackham@blackham-MacBook-Pro
+    - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEOjhiXC9PuaFX4jzKduZQeZ3kC7rkwl203Q7w6phzKi maple-debug_test
   copr-pulumi-go-aws:sshCIDRs:
     # Joseph @home
     - 69.218.222.87/32
+    # Joseph @ UNC/REX
+    - 204.85.209.213/32
     # Jeff @home
     - 204.111.114.196/32
+    # Maple @home
+    - 107.142.121.73/32
+    # Nathan @Home
+    - 71.205.1.197/32
   copr-pulumi-go-aws:sshKeySSMPathBase: /ec2/keypair/poc
+  copr-pulumi-go-aws:certsProjectName: josephtate/copr-pulumi-go-aws-certs
   copr-pulumi-go-aws:vpcProjectName: josephtate/copr-pulumi-go-aws-vpc

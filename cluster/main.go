@@ -28,7 +28,7 @@ func main() {
 
 		// Please note that "backend" is named such because it is the executing engine of COPR, not the due to the
 		// typical frontend/backend development architecture. It is not the backend of the application.
-		_, err = resources.CreateInstance(ctx, cfg, "backend", cfg.GetInt("instanceRootVolSizeBackend"), backendSGs(cfg, sGroups), true)
+		inst, err := resources.CreateInstance(ctx, cfg, "backend", cfg.GetInt("instanceRootVolSizeBackend"), backendSGs(cfg, sGroups), true)
 		if err != nil {
 			return err
 		}
@@ -38,7 +38,7 @@ func main() {
 			if rootSize == 0 {
 				rootSize = 30
 			}
-			_, err = resources.CreateInstance(ctx, cfg, "frontend",
+			inst, err = resources.CreateInstance(ctx, cfg, "frontend",
 				rootSize,
 				[]*ec2.SecurityGroup{
 					sGroups.Frontend,
@@ -47,6 +47,17 @@ func main() {
 			if err != nil {
 				return err
 			}
+		}
+		_, err = resources.CreateALB(
+			ctx,
+			cfg,
+			"alb",
+			[]*ec2.Instance{inst},
+			[]*ec2.SecurityGroup{sGroups.LB},
+			true,
+		)
+		if err != nil {
+			return err
 		}
 
 		if config.GetBool(ctx, "provisionStandaloneDistGit") {
