@@ -1,0 +1,7 @@
+name: copr-pulumi-go-aws-certs
+runtime: go
+description: An ACM Certificate with DNS validation using a Hosted Route53 Zone from a stackref
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: https://www.pulumi.com/ai/api/project/f05f6304-34af-4d4a-980d-a1e2e7e980d1.zip
