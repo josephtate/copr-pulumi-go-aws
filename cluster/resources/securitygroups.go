@@ -1,6 +1,8 @@
 package resources
 
 import (
+	"fmt"
+
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/vpc"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
@@ -120,9 +122,43 @@ func CreateSecurityGroups(ctx *pulumi.Context, config *config.Config) (*Security
 		return nil, err
 	}
 
+	// Allow traffic only to ports 80 and 443 of load balancer
+	for _, port := range []int{80, 443} {
+		_, err = vpc.NewSecurityGroupIngressRule(ctx, fmt.Sprintf(resourcePrefix+"lb-%d-v4-ingress-from-world", port),
+			&vpc.SecurityGroupIngressRuleArgs{
+				Description:     pulumi.String("Allow IPv4 traffic from the world to the load balancer"),
+				SecurityGroupId: lbsg.ID(),
+				IpProtocol:      pulumi.String("tcp"),
+				FromPort:        pulumi.Int(port),
+				ToPort:          pulumi.Int(port),
+				CidrIpv4:        pulumi.String("0.0.0.0/0"),
+			})
+		_, err = vpc.NewSecurityGroupIngressRule(ctx, fmt.Sprintf(resourcePrefix+"lb-%d-v6-ingress-from-world", port),
+			&vpc.SecurityGroupIngressRuleArgs{
+				Description:     pulumi.String("Allow IPv6 traffic from the world to the load balancer"),
+				SecurityGroupId: lbsg.ID(),
+				IpProtocol:      pulumi.String("tcp"),
+				FromPort:        pulumi.Int(port),
+				ToPort:          pulumi.Int(port),
+				CidrIpv6:        pulumi.String("::/0"),
+			})
+	}
+	// allow lb traffic outbound to frontend group
+	_, err = vpc.NewSecurityGroupEgressRule(ctx, resourcePrefix+"lb-egress-to-frontend-sg", &vpc.SecurityGroupEgressRuleArgs{
+		Description:               pulumi.String("Allow traffic from the load balancer to the frontend"),
+		SecurityGroupId:           lbsg.ID(),
+		ReferencedSecurityGroupId: fesg.ID(),
+		IpProtocol:                pulumi.String("tcp"),
+		FromPort:                  pulumi.Int(5000),
+		ToPort:                    pulumi.Int(5000),
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	// Allow lb traffic to the frontend group
 	_, err = vpc.NewSecurityGroupIngressRule(ctx, resourcePrefix+"frontend-ingress-from-lb-sg", &vpc.SecurityGroupIngressRuleArgs{
-		Description:               pulumi.String("Allow traffic from the load balancer"),
+		Description:               pulumi.String("Allow traffic from the load balancer to the frontend"),
 		SecurityGroupId:           fesg.ID(),
 		ReferencedSecurityGroupId: lbsg.ID(),
 		IpProtocol:                pulumi.String("tcp"),
