@@ -1,8 +1,0 @@
-config:
-  aws:region: us-east-2
-  copr-pulumi-go-aws-certs:albDomainName: copr.poc.ciqlinux.com
-  copr-pulumi-go-aws-certs:albSANs:
-    - copr.poc.ciqlinux.com
-    - www.copr.poc.ciqlinux.com
-  copr-pulumi-go-aws-certs:resourcePrefix: copr-poc-
-  copr-pulumi-go-aws-certs:vpcProjectName: josephtate/copr-pulumi-go-aws-vpc
